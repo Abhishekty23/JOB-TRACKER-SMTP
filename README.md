@@ -4,6 +4,8 @@
 
 The page can send up to 50 shareable jobs through an SMTP account after the deployment is configured. The recipient is entered in the dialog and the user must click **Send email** and complete Cloudflare Turnstile verification. Only company, role, and apply link are sent; personal notes and application status are excluded. The endpoint limits each IP address to five send attempts per hour.
 
+The share dialog also has **Download job list (CSV)**. It downloads only company name, role, and apply link in a spreadsheet-friendly CSV file.
+
 1. Deploy this folder as a Vercel project using Node.js 20 or newer.
 2. Create a Cloudflare Turnstile widget for the deployment hostname and an Upstash Redis database.
 3. Add these environment variables in the Vercel project settings:

@@ -107,6 +107,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
   <div id="turnstileWidget" style="margin-top:12px"></div>
   <p class="note" id="shareStatus" role="status" aria-live="polite"></p>
   <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+    <button class="btn" id="shareDownload">Download job list (CSV)</button>
     <button class="btn" id="shareClose">Close</button>
     <button class="btn primary" id="shareSend">Send email</button>
   </div>
@@ -214,6 +215,18 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
     setupTurnstile();
   };
   $("shareClose").onclick=function(){$("shareDlg").close()};
+  $("shareDownload").onclick=function(){
+    var withLink=jobs.filter(function(j){return safeUrl(j.link)});
+    if(!withLink.length){$("shareStatus").textContent="Add jobs with apply links before downloading.";return}
+    var header=["Company Name","Role","Apply Link"];
+    var rows=withLink.map(function(j){return[j.company,j.role,safeUrl(j.link)].map(csvCell).join(",")});
+    var blob=new Blob(["\uFEFF"+[header.join(",")].concat(rows).join("\r\n")],{type:"text/csv;charset=utf-8"});
+    var url=URL.createObjectURL(blob),link=document.createElement("a");
+    link.href=url;link.download="job-list.csv";link.hidden=true;
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(function(){URL.revokeObjectURL(url)},1000);
+    $("shareStatus").textContent="Downloaded job-list.csv with "+withLink.length+" "+(withLink.length===1?"job.":"jobs.");
+  };
   function setupTurnstile(){
     $("shareStatus").textContent="Loading email verification…";
     fetch("/api/config").then(function(response){
