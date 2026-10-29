@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Job Application Tracker</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--text:#1b1f2a;--muted:#6b7280;--line:#e5e7eb;--brand:#4f46e5;--brand-ink:#fff;--ok:#059669;--warn:#d97706;--bad:#dc2626;--info:#2563eb;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1117;--card:#181b24;--text:#e8eaf0;--muted:#9aa1b2;--line:#2a2e3a;--brand:#818cf8;--brand-ink:#0f1117;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1117;--card:#181b24;--text:#e8eaf0;--muted:#9aa1b2;--line:#2a2e3a;--brand:#818cf8;--brand-ink:#0f1117;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.45}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:20px}
+h1{font-size:24px;margin:0;letter-spacing:-.3px}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font:inherit;font-size:14px}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600}
+.btn.sm{padding:5px 10px;font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:26px;letter-spacing:-.5px}
+.stat span{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px}
+.card h2{font-size:16px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);font:inherit;font-size:14px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.toolbar input{flex:1;min-width:180px}.toolbar select{width:auto}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:820px;background:var(--card)}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:var(--bg);cursor:pointer;user-select:none;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.co{font-weight:600}
+td a{color:var(--brand);text-decoration:none;font-weight:600}
+td a:hover{text-decoration:underline}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.s-Saved{color:var(--muted)}.s-Applied{color:var(--info)}.s-Interview{color:var(--warn)}.s-Offer{color:var(--ok)}.s-Rejected{color:var(--bad)}
+.empty{text-align:center;color:var(--muted);padding:36px 12px}
+.rowact{display:flex;gap:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.note{color:var(--muted);font-size:13px;margin-top:10px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--text);max-width:560px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Job Application Tracker<small>Track every company, role and apply link in one place</small></h1>
+    <div class="actions">
+      <button class="btn" id="shareBtn">Share with friend</button>
+      <button class="btn" id="csvBtn">Export CSV</button>
+      <button class="btn" id="jsonBtn">Backup JSON</button>
+      <button class="btn" id="importBtn">Import</button>
+      <input type="file" id="importFile" accept=".json,.csv" hidden>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="card">
+    <h2 id="formTitle">Add a job</h2>
+    <div class="grid">
+      <div><label>Company *</label><input id="company" placeholder="e.g. Google"></div>
+      <div><label>Role *</label><input id="role" placeholder="e.g. Frontend Developer"></div>
+      <div><label>Apply link</label><input id="link" type="url" placeholder="https://..."></div>
+      <div><label>Job source</label><input id="source" list="sources" placeholder="LinkedIn, Naukri, Referral…">
+        <datalist id="sources"><option>LinkedIn</option><option>Naukri</option><option>Indeed</option><option>Company website</option><option>Referral</option><option>Instahyre</option><option>Wellfound</option></datalist></div>
+      <div><label>Date applied</label><input id="date" type="date"></div>
+      <div><label>Status</label><select id="status"><option>Saved</option><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select></div>
+      <div><label>Notes</label><input id="notes" placeholder="Optional"></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn primary" id="saveBtn">Add job</button>
+      <button class="btn" id="cancelBtn" hidden>Cancel edit</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="q" placeholder="Search company, role, source…">
+    <select id="fstatus"><option value="">All statuses</option><option>Saved</option><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th data-k="company">Company</th><th data-k="role">Role</th><th data-k="source">Source</th>
+      <th data-k="date">Date applied</th><th data-k="status">Status</th><th>Apply link</th><th></th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <p class="note">No limit on entries. Data is saved in this browser. Use Backup JSON / Export CSV to keep a copy or move it to another device, and Import to load it back.</p>
+</div>
+
+<dialog id="shareDlg">
+  <h2 style="margin-top:0;font-size:17px">Share jobs with your friend</h2>
+  <p class="note" style="margin-top:0">Send this list of jobs with apply links to your friend. Your personal status and notes are not included.</p>
+  <textarea id="shareText" rows="10" readonly></textarea>
+  <div style="margin-top:12px"><label>Friend's email</label><input id="friendEmail" type="email" placeholder="friend@example.com"></div>
+  <div id="turnstileWidget" style="margin-top:12px"></div>
+  <p class="note" id="shareStatus" role="status" aria-live="polite"></p>
+  <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+    <button class="btn" id="shareClose">Close</button>
+    <button class="btn primary" id="shareSend">Send email</button>
+  </div>
+</dialog>
+<div class="toast" id="toast"></div>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
+<script>
+(function(){
+  var KEY="jobTracker.v1", jobs=[], editId=null, sortK="date", sortDir=-1, turnstileWidget=null, turnstileToken="", maxEmailJobs=50;
+  var $=function(id){return document.getElementById(id)};
+  function load(){try{var r=localStorage.getItem(KEY);jobs=r?JSON.parse(r):[]}catch(e){jobs=[]} if(!Array.isArray(jobs))jobs=[]}
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify(jobs))}catch(e){toast("Could not save in this browser. Use Backup JSON.")}}
+  function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove("show")},2200)}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function safeUrl(u){u=typeof u==="string"?u.trim():"";if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;try{var p=new URL(u);return(p.protocol==="http:"||p.protocol==="https:")?p.href:""}catch(e){return""}}
+  function fmt(d){if(!d)return"—";var p=d.split("-");if(p.length!==3)return d;var m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return p[2]+" "+m[+p[1]-1]+" "+p[0]}
+  function today(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+
+  function stats(){
+    var c={Saved:0,Applied:0,Interview:0,Offer:0,Rejected:0};jobs.forEach(function(j){c[j.status]=(c[j.status]||0)+1});
+    var items=[["Total",jobs.length],["Applied",c.Applied],["Interviews",c.Interview],["Offers",c.Offer],["Rejected",c.Rejected]];
+    $("stats").innerHTML=items.map(function(i){return '<div class="stat"><b>'+i[1]+'</b><span>'+i[0]+'</span></div>'}).join("");
+  }
+  function render(){
+    stats();
+    var q=$("q").value.toLowerCase().trim(), fs=$("fstatus").value;
+    var list=jobs.filter(function(j){
+      if(fs&&j.status!==fs)return false;
+      return !q||[j.company,j.role,j.source,j.notes].join(" ").toLowerCase().indexOf(q)>-1;
+    }).sort(function(a,b){var x=(a[sortK]||"").toLowerCase(),y=(b[sortK]||"").toLowerCase();return x<y?-sortDir:x>y?sortDir:0});
+    $("rows").innerHTML=list.length?list.map(function(j){
+      var u=safeUrl(j.link);
+      return '<tr><td class="co">'+esc(j.company)+(j.notes?'<div class="note" style="margin:2px 0 0;font-weight:400">'+esc(j.notes)+'</div>':'')+'</td><td>'+esc(j.role)+'</td><td>'+esc(j.source||"—")+'</td><td>'+fmt(j.date)+'</td><td><span class="badge s-'+esc(j.status)+'">'+esc(j.status)+'</span></td><td>'+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">Apply ↗</a>':'—')+'</td><td><div class="rowact"><button class="btn sm" data-edit="'+j.id+'">Edit</button><button class="btn sm" data-del="'+j.id+'">Delete</button></div></td></tr>';
+    }).join(""):'<tr><td colspan="7" class="empty">'+(jobs.length?"No jobs match your search.":"No jobs yet. Add your first one above.")+'</td></tr>';
+  }
+  function clearForm(){["company","role","link","source","notes"].forEach(function(i){$(i).value=""});$("date").value=today();$("status").value="Applied";editId=null;$("formTitle").textContent="Add a job";$("saveBtn").textContent="Add job";$("cancelBtn").hidden=true}
+  function save(){
+    var company=$("company").value.trim(), role=$("role").value.trim();
+    if(!company||!role){toast("Company and role are required");return}
+    var link=$("link").value.trim();
+    if(link&&!safeUrl(link)){toast("Enter a valid link");return}
+    var rec={company:company,role:role,link:link?safeUrl(link):"",source:$("source").value.trim(),date:$("date").value,status:$("status").value,notes:$("notes").value.trim()};
+    if(editId){jobs=jobs.map(function(j){return j.id===editId?Object.assign({id:editId},rec):j});toast("Updated")}
+    else{rec.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);jobs.push(rec);toast("Added")}
+    persist();clearForm();render();
+  }
+  function startEdit(id){
+    var j=jobs.filter(function(x){return x.id===id})[0];if(!j)return;
+    editId=id;$("company").value=j.company;$("role").value=j.role;$("link").value=j.link||"";$("source").value=j.source||"";$("date").value=j.date||"";$("status").value=j.status;$("notes").value=j.notes||"";
+    $("formTitle").textContent="Edit job";$("saveBtn").textContent="Save changes";$("cancelBtn").hidden=false;window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function csvCell(v){v=String(v==null?"":v);if(/^[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
+  function toCSV(){var h=["Company","Role","Source","Date applied","Status","Apply link","Notes"];return [h.join(",")].concat(jobs.map(function(j){return [j.company,j.role,j.source,j.date,j.status,j.link,j.notes].map(csvCell).join(",")})).join("\n")}
+  async function download(name,text,mime){
+    try{
+      var dl=await claude.use("downloads");
+      if(dl){await dl.save({filename:name,data:new Blob([text],{type:mime})});return}
+    }catch(e){if(e&&e.code==="declined")return}
+    try{await navigator.clipboard.writeText(text);toast("Download unavailable here, copied to clipboard instead")}catch(e){toast("Download not available in this view")}
+  }
+  function parseCSV(t){
+    var rows=[],r=[],c="",q=false;
+    for(var i=0;i<t.length;i++){var ch=t[i];
+      if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+      else if(ch==='"')q=true; else if(ch===","){r.push(c);c=""}
+      else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";rows.push(r);r=[]}
+      else c+=ch}
+    if(c||r.length){r.push(c);rows.push(r)}
+    return rows.filter(function(x){return x.some(function(y){return y.trim()})});
+  }
+  function importText(name,text){
+    var added=[];
+    try{
+      if(/\.json$/i.test(name)){var d=JSON.parse(text);if(!Array.isArray(d))throw 0;added=d}
+      else{var rows=parseCSV(text);rows.shift();added=rows.map(function(r){return{company:r[0],role:r[1],source:r[2],date:r[3],status:r[4],link:r[5],notes:r[6]}})}
+    }catch(e){toast("Could not read that file");return}
+    var n=0,valid=["Saved","Applied","Interview","Offer","Rejected"];
+    added.forEach(function(a){
+      if(!a||!a.company||!a.role)return;
+      jobs.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),company:String(a.company),role:String(a.role),source:String(a.source||""),date:String(a.date||""),status:valid.indexOf(a.status)>-1?a.status:"Applied",link:safeUrl(a.link),notes:String(a.notes||"")});n++;
+    });
+    persist();render();toast("Imported "+n+" jobs");
+  }
+
+  $("saveBtn").onclick=save;
+  $("cancelBtn").onclick=clearForm;
+  ["company","role","link","source","notes"].forEach(function(i){$(i).addEventListener("keydown",function(e){if(e.key==="Enter")save()})});
+  $("q").oninput=render;$("fstatus").onchange=render;
+  $("rows").onclick=function(e){
+    var b=e.target.closest("button");if(!b)return;
+    if(b.dataset.edit)startEdit(b.dataset.edit);
+    if(b.dataset.del&&confirm("Delete this job?")){jobs=jobs.filter(function(j){return j.id!==b.dataset.del});persist();render()}
+  };
+  document.querySelectorAll("th[data-k]").forEach(function(th){th.onclick=function(){var k=th.dataset.k;if(sortK===k)sortDir=-sortDir;else{sortK=k;sortDir=1}render()}});
+  $("csvBtn").onclick=function(){download("job-applications.csv",toCSV(),"text/csv")};
+  $("jsonBtn").onclick=function(){download("job-tracker-backup.json",JSON.stringify(jobs,null,2),"application/json")};
+  $("importBtn").onclick=function(){$("importFile").click()};
+  $("importFile").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){importText(f.name,String(r.result))};r.readAsText(f);e.target.value=""};
+  $("shareBtn").onclick=function(){
+    var withLink=jobs.filter(function(j){return safeUrl(j.link)});
+    $("shareText").value=withLink.length?withLink.map(function(j,i){return (i+1)+". "+j.company+" — "+j.role+"\n   Apply link: "+safeUrl(j.link)}).join("\n\n"):"Add jobs with apply links first.";
+    try{$("friendEmail").value=localStorage.getItem("jobTracker.friend")||""}catch(e){}
+    $("shareDlg").showModal();
+    setupTurnstile();
+  };
+  $("shareClose").onclick=function(){$("shareDlg").close()};
+  function setupTurnstile(){
+    $("shareStatus").textContent="Loading email verification…";
+    fetch("/api/config").then(function(response){
+      return response.json().then(function(config){if(!response.ok)throw new Error(config.error||"Email sending is not configured.");return config});
+    }).then(function(config){
+      var attempts=0;
+      function renderWidget(){
+        if(!window.turnstile){
+          if(attempts++>=50){$("shareStatus").textContent="Email verification could not load. Check your connection and refresh.";return}
+          setTimeout(renderWidget,100);return
+        }
+        if(turnstileWidget!==null){window.turnstile.reset(turnstileWidget);turnstileToken="";return}
+        $("shareStatus").textContent="Complete the verification before sending.";
+        turnstileWidget=window.turnstile.render("#turnstileWidget",{
+          sitekey:config.turnstileSiteKey,
+          callback:function(token){turnstileToken=token;$("shareStatus").textContent="Verification complete. Click Send email to send."},
+          "expired-callback":function(){turnstileToken="";$("shareStatus").textContent="Verification expired. Complete it again before sending."},
+          "error-callback":function(){$("shareStatus").textContent="Email verification could not load. Refresh and try again."}
+        });
+      }
+      renderWidget();
+    }).catch(function(error){$("shareStatus").textContent=error.message||"Email sending is not configured."});
+  }
+  function emailDetails(){
+    var to=$("friendEmail").value.trim();
+    if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(to)){throw new Error("Enter a valid email address.")}
+    var withLink=jobs.filter(function(j){return safeUrl(j.link)});
+    if(!withLink.length){throw new Error("Add jobs with apply links first.")}
+    if(withLink.length>maxEmailJobs){throw new Error("You can send up to "+maxEmailJobs+" jobs at a time.")}
+    try{localStorage.setItem("jobTracker.friend",to)}catch(e){}
+    return{to:to,jobs:withLink.map(function(j){return{company:j.company,role:j.role,link:safeUrl(j.link)}})};
+  }
+  $("shareSend").onclick=async function(){
+    var button=$("shareSend");
+    if(button.disabled)return;
+    button.disabled=true;
+    try{
+      var details=emailDetails();
+      if(!turnstileToken)throw new Error("Complete the email verification before sending.");
+      $("shareStatus").textContent="Sending email…";
+      var response=await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:details.to,jobs:details.jobs,turnstileToken:turnstileToken})});
+      var result=await response.json();
+      if(!response.ok)throw new Error(result.error||"Email could not be sent.");
+      $("shareStatus").textContent="Email sent successfully.";
+      $("shareDlg").close();
+      toast("Email sent to "+details.to);
+    }catch(error){
+      $("shareStatus").textContent=error.message||"Email could not be sent. Please try again.";
+    }finally{
+      turnstileToken="";
+      if(turnstileWidget!==null&&window.turnstile)window.turnstile.reset(turnstileWidget);
+      button.disabled=false;
+    }
+  }
+
+  load();clearForm();render();
+})();
+</script>
+</body>
+</html>

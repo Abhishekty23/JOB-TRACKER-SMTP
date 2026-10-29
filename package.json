@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@upstash/ratelimit": "^2.0.5",
+    "@upstash/redis": "^1.35.3",
+    "nodemailer": "^10.3.0"
+  }
+}
